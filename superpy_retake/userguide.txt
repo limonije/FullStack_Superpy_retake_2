@@ -1,0 +1,168 @@
+Userguide for Superpy command-line tool 1.2
+
+180623 New release
+In this update the system date now also can be used on the reports. The structure of the reports remain the same.
+So you can receive a report on today (which is the set systemdate), yesterday (the day before the system date).
+Unfortunately one bug remains: If inventory is completely empty, you get an error. Please make
+sure you have one product left in your inventory! So buy products first. You can sell afterwards, but leave one product in stock!
+
+140623 New release
+Bugfixes: a bug was preventing the command-line tool to work properly to sell. This bug is fixed!
+Also the id's were not working the right way, but also that is solved.
+New funtionality: it is now possible to change the date of the system. With the following command you can 
+change the date to any date you would like:
+python main.py set-date --date 2023-07-01
+In order to change the date back to today's date, please use the command:
+python main.py set-date --today
+This changed date will impact the date of bought or sold products. So you can buy or sell on a future date of your preference.  
+
+
+In this userguide you will find the explanation how to use the Superpy command-line tool 1.0 in python. 
+Please note: basic knowledge of using the command-line interface is required! 
+
+The command-line tool starts with the command python main.py combined with a certain command.
+All the commands of the tool will be explained below and also some examples of the expected output are given. 
+In case it is unclear how to give a certain command, you can always type -h or --help to see the necessary data to create a command. 
+
+The tool has in total 6 commands. Two commands: buy and sell are used to create csv files with products bought or sold.
+4 commands are reporting commands: report-inventory, report-revenue, report-profit and forecast. 
+With these commands you generated reports based on the csv files.
+
+buy
+This is the command to use if you buy a product. Based on this command actually two csv files are updated:
+bought.csv and inventory.csv. The reason for this to keep all the history of bought products in the bought file. 
+The inventory file will be updated after a product is sold.
+
+Together with the buy command you need to fill in some data (in brackets you see the explantion when you use -h or --help):
+--productname (name of the product bought)
+--price (price paid for product)
+--expirationdate (date when product expires, use yyyy-mm-dd format)
+
+The total command is then:
+python main.py buy --productname apple --price 0.5 --expirationdate 2022-12-24
+
+If the command is used in a correct way you will see a green OK in de command line after you press enter.
+The product is now written to the bought.csv and inventory.csv. In the bought.csv file also an id and buy_date (today) is added.
+In the inventory.csv an id and count (1 product) is added.
+
+sell
+This is the command to use if you sell a product. Based on this command actually two csv files are updated:
+sold.csv and inventory.csv. The product sold will be removed from the inventory file. 
+This is important to create an accurate inventory report later on. It is recommended to generate an inventory report 
+(see command report-inventory) before you sell a product. 
+
+Together with the buy command you need to fill in some data (in brackets you see the explantion when you use -h or --help):
+--productname (name of the product bought)
+--price (sell price for product)
+
+The total command is then:
+python main.py sell --productname cheese --price 3.2
+
+If the command is used in a correct way you will see a green OK in de command line after you press enter.
+In case you try to sell a product that is no longer in the inventory or is expired you receive the following message:
+ERROR: Product not in stock or expired, please check inventory.
+
+There are 4 reporting commands.
+
+report-inventory
+As already mentioned in the sell command, with the report-inventory command you will get an inventory report to check if
+you can sell a product. You can create an inventory report for today and yesterday. Since the inventory report will be updated after you
+sell a product, you no longer see this product in the report yesterday. 
+
+The total command is then:
+python main.py report-inventory --today
+After pressing enter, you will see a table that looks like this example:
+
+╒════════════════╤═════════╤═════════════╤═══════════════════╕
+│ Product Name   │   Count │   Buy Price │ Expiration Date   │
+╞════════════════╪═════════╪═════════════╪═══════════════════╡
+│ butter         │       1 │         0.8 │ 2022-12-28        │
+├────────────────┼─────────┼─────────────┼───────────────────┤
+│ icecream       │       1 │         3.1 │ 2023-07-16        │
+╘════════════════╧═════════╧═════════════╧═══════════════════╛
+
+Please note: a product that is expired today, is still visible in the report of yesterday:
+python main.py report-inventory --yesterday
+╒════════════════╤═════════╤═════════════╤═══════════════════╕
+│ Product Name   │   Count │   Buy Price │ Expiration Date   │
+╞════════════════╪═════════╪═════════════╪═══════════════════╡
+│ butter         │       1 │         0.8 │ 2022-12-28        │
+├────────────────┼─────────┼─────────────┼───────────────────┤
+│ icecream       │       1 │         3.1 │ 2023-07-16        │
+├────────────────┼─────────┼─────────────┼───────────────────┤
+│ apple          │       1 │         0.5 │ 2022-12-17        │
+╘════════════════╧═════════╧═════════════╧═══════════════════╛
+
+report-revenue
+Based on the sold.csv file it is possible to calculate the revenue of today, yesterday or a month (date format yyyy-mm).
+Together with the command you fill in --today or --yesterday of --date. If you choose --date then you need to specify the year and month 
+in the yyyy-mm format. In case you use the wrong format, you get the following error message:
+Incorrect date format, please use yyyy-mm
+
+If you use as comment:
+python main.py report-revenue --today
+After pressing enter, you receive the following message:
+Today's revenue so far: 3.2
+
+or if nothing is sold
+python main.py report-revenue --yesterday
+Yesterday's revenue: 0
+
+for a overview of the revenue per month, the command and message are:
+python main.py report-revenue --date 2022-12
+Revenue from December 2022: 11.7
+
+report-profit
+With this command first the profit.csv file is updated based on new sales combining the information in
+sold.csv and bought.csv files in a new cvs file called profit.csv. This is something the system does automatically. 
+Just like the revenue report it is possible to calculate the profit of today, yesterday or a month (date format yyyy-mm).
+And for the profit today and yesterday the output is quite similar:
+
+python main.py report-profit --today
+Today's profit so far: 1.1  
+
+python main.py report-profit --yesterday
+Yesterday's profit: 0
+
+However in the profit per month a distinction is made between profit and actual profit:
+
+python main.py report-profit --date 2022-12
+Profit from December 2022: 4.4
+Actual Profit from December 2022: 2.6
+
+The actual profit is the combined profit of sold products in a certain month minus the cost of expired products in that same month.
+
+Additional feature is if you run the following command:
+python profit.py
+
+a pdf report called profit.pdf is generated with an overview of all the products sold and their buying price. 
+With this report it is also possible to check (based on bought_id and id) if the right products are sold.
+
+forecast
+With the forcast command it is possible to advance time in order to check if some products will expire at an certain date.
+The user can specify in the command the number of day the date needs to be advanced. So if today is December 18 2022 and 
+you use the following command:
+python main.py forecast --advancetime 10
+
+You first see the message OK (that means the system is looking at date December 28 2022) and then a table
+OK
+
+╒════════════════╤═════════╤═════════════╤═══════════════════╕
+│ Product Name   │   Count │   Buy Price │ Expiration Date   │
+╞════════════════╪═════════╪═════════════╪═══════════════════╡
+│ butter         │       1 │         0.8 │ 2022-12-28        │
+╘════════════════╧═════════╧═════════════╧═══════════════════╛
+
+In this case the butter will expire on that date. If you use another command e.g.:
+python main.py forecast --advancetime 3 
+
+OK
+╒════════════════╤═════════╤═════════════╤═══════════════════╕
+│ Product Name   │ Count   │ Buy Price   │ Expiration Date   │
+╞════════════════╪═════════╪═════════════╪═══════════════════╡
+╘════════════════╧═════════╧═════════════╧═══════════════════╛
+
+You receive an empty table meaning no products will expire on December 21 2022.
+With this forecast report you can determine if you need to give maybe discounts on products that will expire in the near future.
+
+We look forward to receive your review on this Superpy command-line tool 1.1, so we can improve the system in the future!
